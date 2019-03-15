@@ -141,17 +141,25 @@ function _upload (receiver, to, data, content, filepath, filename, callback) {
         //url, request options, post data, file
         receiver, null, data, content, filename,
         function(err, res) {
-            if (err || res.trim() != '0') {
-                callback('upload file [' + filepath + '] to [' + data['to'] + '] by receiver [' + receiver + '] error [' + (err || res) + ']');
+            var json = null;
+            res = res && res.trim();
+
+            try {
+                json = res ? JSON.parse(res) : null;
+            } catch (e) {}
+
+            if (!err && json && json.errno) {
+                callback(json);
+            } else if (err || !json && res != '0') {
+                callback('upload file [' + filepath + '] to [' + data['to'] + '] by receiver [' + receiver + '] error [' + (err) + '] [' + (res || '') + ']');
             } else {
                 var time = '[' + _now(true) + ']';
                 process.stdout.write(
-                    ' - '.green.bold +
+                    '\n - '.green.bold +
                     time.grey + ' ' +
                     filepath.replace(/^\//, '') +
                     ' >> '.yellow.bold +
-                    data['to'] +
-                    '\n'
+                    data['to'] + '\n'
                 );
                 callback();
             }
